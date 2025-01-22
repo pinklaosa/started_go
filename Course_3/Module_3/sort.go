@@ -1,36 +1,77 @@
 package main
 
-import "fmt"
-
-func bubbleSort(arr []int32) {
-	n := len(arr)
-	for i := 0; i < n-1; i++ {
-		for j := 0; j < n-i-1; j++ {
-			if arr[j] > arr[j+1] {
-				arr[j], arr[j+1] = arr[j+1], arr[j]
-			}
-		}
-	}
-}
+import (
+	"fmt"
+	"sort"
+	"sync"
+)
 
 func main() {
-	var input = []int32{1, 5, 98, 87, 4, 8, 9, 10, 25, 45, 78, 13, 45, 95, 62, 47}
-	n := len(input)
-	numParts := 4
-	parts := n / numParts
-	var output = [][]int32{}
-	for i := 0; i < numParts; i++ {
-		start := i * parts
-		end := parts + start
-		if i == n-1 {
-			end = n
-		}
-		output = append(output, input[start:end])
-		fmt.Printf("\nPart: %d > ",i+1)
-		fmt.Print(output[i])
-		fmt.Print(" > ")
-		go bubbleSort(output[i])
-		fmt.Print(output[i])
+	var n int
+	fmt.Print("Enter the number of elements: ")
+	fmt.Scan(&n)
+
+	arr := make([]int, n)
+	fmt.Println("Enter the elements:")
+	for i := 0; i < n; i++ {
+		fmt.Scan(&arr[i])
 	}
 
+	// แบ่งอาร์เรย์ออกเป็น 4 ส่วน
+	numParts := 4
+	partSize := n / numParts
+	remainder := n % numParts
+
+	parts := make([][]int, numParts)
+	start := 0
+
+	for i := 0; i < numParts; i++ {
+		end := start + partSize
+		if i < remainder {
+			end++
+		}
+		parts[i] = arr[start:end]
+		start = end
+	}
+	var wg sync.WaitGroup
+	for i := 0; i < numParts; i++ {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			fmt.Printf("Goroutine %d sorting: %v\n", i+1, parts[i])
+			sort.Ints(parts[i])
+			fmt.Printf("Goroutine %d sorted: %v\n", i+1, parts[i])
+		}(i)
+	}
+
+	wg.Wait()
+
+	sortedArray := mergeSortedParts(parts)
+	fmt.Println("Final sorted array:", sortedArray)
+}
+
+func mergeSortedParts(parts [][]int) []int {
+	result := make([]int, 0)
+	indices := make([]int, len(parts))
+
+	for {
+		minVal := int(^uint(0) >> 1)
+		minIndex := -1
+
+		for i, part := range parts {
+			if indices[i] < len(part) && part[indices[i]] < minVal {
+				minVal = part[indices[i]]
+				minIndex = i
+			}
+		}
+
+		if minIndex == -1 {
+			break
+		}
+
+		result = append(result, minVal)
+		indices[minIndex]++
+	}
+
+	return result
 }
