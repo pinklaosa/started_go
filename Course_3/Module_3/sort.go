@@ -16,8 +16,7 @@ func main() {
 	for i := 0; i < n; i++ {
 		fmt.Scan(&arr[i])
 	}
-
-	// แบ่งอาร์เรย์ออกเป็น 4 ส่วน
+	
 	numParts := 4
 	partSize := n / numParts
 	remainder := n % numParts
