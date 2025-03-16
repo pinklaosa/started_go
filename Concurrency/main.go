@@ -7,7 +7,8 @@ import (
 
 func main() {
 	// HellloRoutine()
-	CalculateParallel()
+	// CalculateParallel()
+	TaskQueue()
 }
 
 func HellloRoutine() {
@@ -24,6 +25,8 @@ func HellloRoutine() {
 	fmt.Println("All routine done !")
 }
 
+
+//if you need to send something into channel use <-
 func SumSlices(numbers []int, wg *sync.WaitGroup, ch chan<- int) {
 	defer wg.Done()
 	var sum int
@@ -47,10 +50,38 @@ func CalculateParallel() {
 
 	wg.Wait()
 	close(ch)
-	
-	sum := 0
+
+	totalsum := 0
 	for  v := range ch {
-		sum += v		
+		totalsum += v		
 	}
-	fmt.Println(sum)
+	fmt.Println(totalsum)
+}
+
+//when use need to use value in channel do not use <-  
+func TaskWorker(order int, task chan string, wg *sync.WaitGroup) {
+	defer wg.Done()
+	fmt.Println("Worker " + fmt.Sprint(order+1) + " processing " + <-task)
+}
+
+func TaskQueue()  {
+	tasks := []string{"Task 1", "Task 2", "Task 3"}
+	
+	var wg sync.WaitGroup
+	ch := make(chan string,len(tasks))
+
+	for i := range tasks {
+		wg.Add(1)
+		go TaskWorker(i,ch,&wg)
+	}
+
+	for _, v := range tasks {
+		ch <- v	
+	}
+
+	wg.Wait()
+
+	fmt.Println("All worker done !")
+
+	
 }
